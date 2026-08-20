@@ -18,9 +18,18 @@ char name[NAME_SIZE+1];
 
 int exit_var = FALSE; 
 
+int isCiphered = 0;
+
+void cipher(char *msg,int key){
+  int length = strlen(msg);
+  for(int i=0; i<length; i++){
+    msg[i] = msg[i] ^ key;
+  }
+}
+
+
 void *receiver_thread(void *connfd){
   int fd = (intptr_t) connfd;
-
   char msg[MAXIMUM_MESSAGE_SIZE+1];
   msg[MAXIMUM_MESSAGE_SIZE] = '\0';
   
@@ -28,7 +37,12 @@ void *receiver_thread(void *connfd){
 
     memset(msg,0,MAXIMUM_MESSAGE_SIZE);
     int receivedBytes = recv(fd,msg,MAXIMUM_MESSAGE_SIZE,0);
+    
+
     if(receivedBytes >= 2){
+      if(isCiphered != 0){
+        cipher(msg,isCiphered);
+      }
       printf("%s",msg);
     }
   }
@@ -40,8 +54,14 @@ int main(int argc,char **argv){
   
   if(argc < 3 ){
     fprintf(stderr,"Please enter a valid IP Address!\n");
-    fprintf(stderr,"./client [IP Address] [Port]");
+    fprintf(stderr,"./client [IP Address] [Port] [Password](Optional)");
     exit(1);
+  }
+
+  if(argc == 4){
+    if(atoi(argv[3]) >= 1 && atoi(argv[3]) <= 255){
+      isCiphered = atoi(argv[3]);
+    }
   }
 
   int ret;
@@ -85,6 +105,14 @@ int main(int argc,char **argv){
   fgets(name,NAME_SIZE,stdin);
   name[NAME_SIZE] = '\0';
   *(name+strlen(name)-1) = '\0'; 
+  
+  char *temp_name = (char *)malloc(sizeof(char)*(strlen(name)+1));
+  strcat(temp_name,name);
+  strcat(temp_name,">\0");
+  send(fd,temp_name,strlen(temp_name),0);
+
+  free(temp_name);
+
 
   char msg[MAXIMUM_MESSAGE_SIZE+1];
   ssize_t msgBytes;

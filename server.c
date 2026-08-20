@@ -16,6 +16,7 @@
 #define NAME_SIZE 256
 #define MAXIMUM_MSG_SIZE 2048 //2048 chars per message 
 
+int isCiphered = 0;
 int thread_counter = 0;
 //Create a pthread mutex so we can have exclusive control over the thread_counter
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -49,6 +50,14 @@ void sendMessage(int fd,char *name,char* str){
         //Add error checking to send syscalls
 }
 
+
+void cipher(char *msg,int key){
+  int length = strlen(msg);
+  for(int i=0; i<length; i++){
+    msg[i] = msg[i] ^ key;
+  }
+}
+
 void * thread_worker(void *connfd){
 
   
@@ -69,6 +78,7 @@ void * thread_worker(void *connfd){
     memset(name,0,NAME_SIZE+1);
     bytes = recv(fd,name,NAME_SIZE,0);
   }
+  
 
 
   //Format the string to remove \n character 
@@ -100,7 +110,9 @@ void * thread_worker(void *connfd){
     printf("Message received = %s (%d bytes)",temporary_msg,msgBytes);
    
     
-
+    if(isCiphered){
+      cipher(temporary_msg,isCiphered);
+    }
     
     for(int i=0; i<MAX_CONNECTED_USERS; i++){
       if(fd_pool[i] != -1 && fd != fd_pool[i]){
@@ -113,7 +125,10 @@ void * thread_worker(void *connfd){
 
   for(int i=0; i<MAX_CONNECTED_USERS; i++){
     if(fd == fd_pool[i]){
+      
+      pthread_mutex_lock(&mutex);
       fd_pool[i] = -1;
+      pthread_mutex_unlock(&mutex);
       break;
     }
   }
@@ -136,6 +151,11 @@ int main(int argc,char **argv){
   pthread_t pid[MAX_CONNECTED_USERS];
   //Create a return value variable to store return values to check validity
   int ret;
+  if(argc == 4){
+    if(atoi(argv[3]) >= 1 && atoi(argv[3]) <= 255){
+      isCiphered = atoi(argv[3]);
+    }
+  }
     
   //Set pthread attributes
   pthread_attr_t thread_attr;

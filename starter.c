@@ -22,12 +22,12 @@ void startServer(int argc, char** argv){
 
   printf(ANSI_COLOR_CYAN "a)" ANSI_COLOR_RESET " Auto IP\n" );
   printf(ANSI_COLOR_MAGENTA "b)" ANSI_COLOR_RESET " Select IP and Port\n");
-  
+  printf(ANSI_COLOR_RED "c)" ANSI_COLOR_RESET " Select IP, Port and password\n");  
   char a = '\0';
   while(a == '\0'){
     printf(">");
     a = getchar();
-    if(a < 'a' || a > 'b'){
+    if(a < 'a' || a > 'c'){
       printf("Enter a valid character from a-b\n");
       a = '\0';
       while(getchar() != '\n');
@@ -44,22 +44,35 @@ void startServer(int argc, char** argv){
   }
 
   
-  char **custom_argv = (char **)calloc(4,sizeof(char *));
+  char **custom_argv = (char **)calloc(5,sizeof(char *));
   
   while(getchar() != '\n');
   char temp_IP[MAX_IP_LEN+1];
   char temp_port[MAX_PORT_LEN+1];
+  unsigned char temp_key[4]; // 0-255 + '\0'
+  temp_key[3] = '\0';
   printf("Enter IP Address!\n>");
   fgets(temp_IP,MAX_IP_LEN,stdin);
   temp_IP[MAX_IP_LEN] = '\0';
   printf("Enter port!\n>");
   fgets(temp_port,MAX_PORT_LEN,stdin);
   temp_port[MAX_PORT_LEN] = '\0';
+  
+  while(getchar() != '\n');
+  if(a == 'c'){
+    printf("Enter password!\n>");
+    fgets(temp_key,3,stdin);
+    temp_key[strlen(temp_key)] = '\0';
+    custom_argv[3] = strdup(temp_key);
+  }else{
+    custom_argv[3] = "0";
+  }
+  
 
   custom_argv[0] = "./server";
   custom_argv[1] = strdup(temp_IP);
   custom_argv[2] = strdup(temp_port);
-  custom_argv[3] = NULL;
+  custom_argv[4] = NULL;
   
   *(custom_argv[1]+strlen(temp_IP) - 1) = '\0';
 
@@ -82,14 +95,34 @@ void startServer(int argc, char** argv){
 
 void connectServer(){
 
-  char **custom_argv = (char **)calloc(4,sizeof(char *));
+  char **custom_argv = (char **)calloc(5,sizeof(char *));
   
   printf("Connect to server\n");
+  printf(ANSI_COLOR_RED "Select:\n" ANSI_COLOR_RESET);
+
+  printf(ANSI_COLOR_CYAN "a)" ANSI_COLOR_RESET " No password\n" );
+  printf(ANSI_COLOR_MAGENTA "b)" ANSI_COLOR_RESET " with password\n");
+  
+  while(getchar() != '\n');
+  char a = '\0';
+  while(a == '\0'){
+    printf(">");
+    a = getchar();
+    if(a < 'a' || a > 'c'){
+      printf("Enter a valid character from a-b\n");
+      a = '\0';
+      while(getchar() != '\n');
+    }
+  }
+  
+
 
 
   while(getchar() != '\n');
   char temp_IP[MAX_IP_LEN+1];
   char temp_port[MAX_PORT_LEN+1];
+  unsigned char temp_key[4]; // 0-255 + '\0'
+  temp_key[3] = '\0';
   printf("Enter IP Address!\n>");
   fgets(temp_IP,MAX_IP_LEN,stdin);
   temp_IP[MAX_IP_LEN] = '\0';
@@ -97,10 +130,20 @@ void connectServer(){
   fgets(temp_port,MAX_PORT_LEN,stdin);
   temp_port[MAX_PORT_LEN] = '\0';
 
+
   custom_argv[0] = "./client";
   custom_argv[1] = strdup(temp_IP);
   custom_argv[2] = strdup(temp_port);
-  custom_argv[3] = NULL;
+  if(a == 'b'){
+    printf("Enter password!\n>");
+    fgets(temp_key,3,stdin);
+    temp_key[strlen(temp_key)] = '\0';
+    custom_argv[3] = strdup(temp_key);
+    while(getchar() != '\n');
+  }else{
+    custom_argv[3] = "0";
+  }
+  custom_argv[4] = NULL;
 
   *(custom_argv[1]+strlen(temp_IP) - 1) = '\0';
 
