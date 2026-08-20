@@ -131,10 +131,12 @@ void * thread_worker(void *connfd){
 
 int main(int argc,char **argv){
   signal(SIGINT,handle_sigint);
+  
+  signal(SIGPIPE,SIG_IGN);
   pthread_t pid[MAX_CONNECTED_USERS];
   //Create a return value variable to store return values to check validity
   int ret;
-  
+    
   //Set pthread attributes
   pthread_attr_t thread_attr;
   

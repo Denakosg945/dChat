@@ -28,9 +28,8 @@ void *receiver_thread(void *connfd){
 
     memset(msg,0,MAXIMUM_MESSAGE_SIZE);
     int receivedBytes = recv(fd,msg,MAXIMUM_MESSAGE_SIZE,0);
-    if(receivedBytes > (strlen(name)+strlen(">")+2)){
+    if(receivedBytes >= 2){
       printf("%s",msg);
-      
     }
   }
 
@@ -82,12 +81,10 @@ int main(int argc,char **argv){
   }
   
   
-
   printf("Please enter your name: ");
   fgets(name,NAME_SIZE,stdin);
   name[NAME_SIZE] = '\0';
   *(name+strlen(name)-1) = '\0'; 
-
 
   char msg[MAXIMUM_MESSAGE_SIZE+1];
   ssize_t msgBytes;
@@ -109,10 +106,9 @@ int main(int argc,char **argv){
 
   char *str;
   while(!exit_var){
-
           memset(msg,0,MAXIMUM_MESSAGE_SIZE);
           fgets(msg,MAXIMUM_MESSAGE_SIZE,stdin);
-          
+     
           str = (char*)malloc(sizeof(char)*(strlen(name)+strlen(msg)+strlen(">"))-1);
           memset(str,0,sizeof(char)*(strlen(name)+strlen(msg)+strlen(">"))-1);
           strncat(str,name,strlen(name));
