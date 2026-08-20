@@ -8,6 +8,7 @@
 #include <poll.h>
 #include <string.h>
 #include <stdint.h>
+#include <signal.h>
 
 
 #define MAX_CONNECTED_USERS 10
@@ -25,10 +26,25 @@ pthread_cond_t cond_variable = PTHREAD_COND_INITIALIZER;
 int condition = true;
 int fd_pool[MAX_CONNECTED_USERS];
 
+void handle_sigint(int sig){
+
+  printf("SIGINT Detected... Skipping\n");
+  printf("Type :exit to exit\n");
+
+  char temp_msg[6];
+  fgets(temp_msg,6,stdin);
+  if(strcmp(temp_msg,":exit") == 0){
+    for(int i=0; i<MAX_CONNECTED_USERS; i++){
+      if(fd_pool[i] != -1){
+          close(fd_pool[i]);
+      }
+    }
+    exit(0);
+  }
+}
+
 void sendMessage(int fd,char *name,char* str){
-        send(fd,"\r\n",strlen("\r\n"),0);
-        send(fd,name,strlen(name),0);
-        send(fd,">",strlen(">"),0);
+        send(fd,"\n",strlen("\n"),0);
         send(fd,str,strlen(str),0);
         //Add error checking to send syscalls
 }
@@ -73,11 +89,11 @@ void * thread_worker(void *connfd){
 
   int msgBytes = 0;
   while(1){
-    send(fd,name,strlen(name),0);
-    send(fd,">",strlen(">"),0);
-
+    // send(fd,name,strlen(name),0);
+    // send(fd,">",strlen(">"),0);
+    memset(temporary_msg,0,MAX_CONNECTED_USERS);
     msgBytes = recv(fd,temporary_msg,MAXIMUM_MSG_SIZE,0);
-    if(msgBytes <= 0){
+    if(msgBytes <= 2){
       continue;
     }
 
@@ -87,7 +103,7 @@ void * thread_worker(void *connfd){
 
     
     for(int i=0; i<MAX_CONNECTED_USERS; i++){
-      if(fd_pool[i] != -1){
+      if(fd_pool[i] != -1 && fd != fd_pool[i]){
         sendMessage(fd_pool[i],name,temporary_msg);
       }
     }  
@@ -114,7 +130,7 @@ void * thread_worker(void *connfd){
 }
 
 int main(int argc,char **argv){
-
+  signal(SIGINT,handle_sigint);
   pthread_t pid[MAX_CONNECTED_USERS];
   //Create a return value variable to store return values to check validity
   int ret;
