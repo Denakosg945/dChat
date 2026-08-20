@@ -183,6 +183,7 @@ int main(int argc,char **argv){
     address.sin_port = htons(8080);
   }
 
+
   ret = bind(fd,(struct sockaddr *)&address,sizeof(address));
 
   if(ret == -1){
